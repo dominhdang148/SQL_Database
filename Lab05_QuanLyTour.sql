@@ -103,3 +103,24 @@ insert into Lich_TourDL values('T003','15/06/2017',N'Vân',20,N'Trịnh Bá')
 select * from Lich_TourDL
 go
 
+-- II. Thực hiện lệnh truy vấn
+
+-- 1. Cho biết các tour du lịch có tổng số ngày của tour từ 3 đến 5 ngày
+
+-- 2. Cho biết thông tin các tour được tổ chức tỏng tháng 2 năm 2017
+
+-- 3. Cho biết các tour không đi qua thành phố Nha Trang
+
+-- 4. Cho biết số lượng thành phố mà mỗi tour du lịch đi qua
+
+-- 5. Cho biết số lượng toủ du lịch mỗi hướng dẫn viên hướng dẫn
+
+-- 6. Cho biết thông thành phố có nhiều tour du lịch đi qua nhất
+
+-- 7. Cho biết thông tin của tour du lịch đi qua tất cả các thành phố
+
+-- 8. Lạp danh sách các tour đi qua thành phố Đà Latj, thông tin cần hiển thị bao gồm: MaTour, SoNgay
+
+-- 9. Cho biết thông tin của tour du lịch có tổng số lượng khách tham gia nhiều nhất
+
+-- 10. Cho biết tên thành phố mà toaất cả các tour du lịch đều đi qua
