@@ -106,14 +106,22 @@ go
 -- II. Thực hiện lệnh truy vấn
 
 -- 1. Cho biết các tour du lịch có tổng số ngày của tour từ 3 đến 5 ngày
-
--- 2. Cho biết thông tin các tour được tổ chức tỏng tháng 2 năm 2017
-
+select *
+from Tour
+where TongSoNgay>=3 and TongSoNgay <=5
+-- 2. Cho biết thông tin các tour được tổ chức trong tháng 2 năm 2017
+select *
+from Lich_TourDL
+where MONTH(NgayKH)=2
 -- 3. Cho biết các tour không đi qua thành phố Nha Trang
-
+select a.MaTour, b.TenTP
+from Tour_TP a, ThanhPho b
+where a.MaTP=b.MaTP and b.TenTP not in (select c.TenTP
+										from ThanhPho c
+										where c.TenTP=N'Nha Trang')
 -- 4. Cho biết số lượng thành phố mà mỗi tour du lịch đi qua
 
--- 5. Cho biết số lượng toủ du lịch mỗi hướng dẫn viên hướng dẫn
+-- 5. Cho biết số lượng tour du lịch mỗi hướng dẫn viên hướng dẫn
 
 -- 6. Cho biết thông thành phố có nhiều tour du lịch đi qua nhất
 
