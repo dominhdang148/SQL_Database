@@ -121,14 +121,63 @@ where a.MaTP=b.MaTP and b.TenTP not in (select c.TenTP
 										where c.TenTP=N'Nha Trang')
 -- 4. Cho biết số lượng thành phố mà mỗi tour du lịch đi qua
 
+select MaTour, count(MaTP) as SoTPDiQua
+from Tour_TP
+group by MaTour
+
 -- 5. Cho biết số lượng tour du lịch mỗi hướng dẫn viên hướng dẫn
+
+select TenHDV, count(MaTour) as SoTourHuongDan
+from Lich_TourDL
+group by TenHDV --Có thể sai
 
 -- 6. Cho biết thông thành phố có nhiều tour du lịch đi qua nhất
 
+select b.MaTP, a.TenTP
+from ThanhPho a, Tour_TP b
+where a.MaTP=b.MaTP
+group by b.MaTP, a.TenTP
+having count(b.MaTour)  >= all (select count(c.MaTour)
+								from Tour_TP c
+								group by c.MaTour)
+
 -- 7. Cho biết thông tin của tour du lịch đi qua tất cả các thành phố
 
--- 8. Lạp danh sách các tour đi qua thành phố Đà Latj, thông tin cần hiển thị bao gồm: MaTour, SoNgay
+--insert into Tour_TP values ('T004','01', 2)
+--insert into Tour_TP values ('T004','03', 3)
+go 
+
+select *
+from Tour a
+where not exists(select *
+				from ThanhPho b
+				where not exists (select *
+								from Tour_TP c
+								where c.MaTP = b.MaTP and a.MaTour=c.MaTour))
+
+
+
+-- 8. Lạp danh sách các tour đi qua thành phố Đà Lạt, thông tin cần hiển thị bao gồm: MaTour, SoNgay
+
+select MaTour, SoNgay
+from Tour_TP
+where MaTP='01'
 
 -- 9. Cho biết thông tin của tour du lịch có tổng số lượng khách tham gia nhiều nhất
 
--- 10. Cho biết tên thành phố mà toaất cả các tour du lịch đều đi qua
+select MaTour, sum(SoNguoi) as TongSoNguoi
+from Lich_TourDL 
+group by MaTour
+having sum(SoNguoi)>=all(select sum(a.SoNguoi)
+						from Lich_TourDL a
+						group by a.MaTour)
+
+-- 10. Cho biết tên thành phố mà tất cả các tour du lịch đều đi qua
+
+select *
+from ThanhPho a
+where not exists (select *
+				from Tour b
+				where not exists (select *
+								from Tour_TP c
+								where a.MaTP=c.MaTP and b.MaTour=c.MaTour))
