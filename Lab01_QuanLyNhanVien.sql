@@ -97,6 +97,7 @@ insert into NhanVienKyNang values('0004','03',1)
 insert into NhanVienKyNang values('0005','02',4)
 insert into NhanVienKyNang values('0005','04',4)
 insert into NhanVienKyNang values('0006','05',4)
+insert into NhanVienKyNang values('0006','01',)
 insert into NhanVienKyNang values('0006','02',4)
 insert into NhanVienKyNang values('0006','03',2)
 insert into NhanVienKyNang values('0007','03',4)
@@ -117,3 +118,57 @@ select a.MSNV, a.Ho+' '+a.Ten as HoTen, a.NgaySinh, a.NgayVaoLam, b.TenCN
 from NhanVien a, ChiNhanh b
 where a.MSCN=b.MSCN
 order by b.TenCN
+
+-- c) Liệt kê các nhân viên (Họ Tên, Tên KỹNăng, Mức Độ) của những nhân viên biết sử dụng Word.
+
+select a.Ho +' '+ a.Ten as HoTen, c.TenKN, b.MucDo
+from NhanVien a, NhanVienKyNang b, KyNang c
+where a.MSNV = b.MSNV and  c.MSKN = b.MSKN and c.TenKN = 'Word'
+
+-- d) Liệt kê các kỹ năng (TênKN, Mức độ) Mà nhân viên Lê Anh Tuấn sử dụng được 
+
+select b.TenKN, c.MucDo
+from NhanVien a, KyNang b, NhanVienKyNang c
+where a.MSNV = c.MSNV and b.MSKN = c.MSKN and a.Ho+' '+a.Ten= N'Lê Anh Tuấn'
+
+-- 2. Truy vấn lồng.
+-- a) Liệt kê MSNV, Họ Tên, MSCN, TenCN của các nhân viên có mức độ thành thạo về Excel cao nhất trong công ty
+
+select a.MSNV, a.Ho +' '+a.Ten as HoTen, a.MSCN, d.TenCN
+from NhanVien a, KyNang b, NhanVienKyNang c, ChiNhanh d
+where a.MSCN = d.MSCN and a.MSNV = c.MSNV and c.MSKN = b.MSKN and b.TenKN = 'Excel' 
+and c.MucDo >=all(select e.MucDo
+				from NhanVienKyNang e, KyNang f
+				where e.MSKN = f.MSKN and f.TenKN = 'Excel')	
+
+-- b) Liệt kê MSNV, Họ Tên, Tên CN của các nhân viên vừa biết Word vừa biết Excel (dùng truy vấn lồng)
+
+select a.MSNV, a.Ho+' ' + a.Ten as HoTen, b.TenCN
+from NhanVien a, ChiNhanh b, NhanVienKyNang c, KyNang d
+where a.MSNV = c.MSNV and a.MSCN = b.MSCN and c.MSKN = d.MSKN and d.TenKN = 'Word' 
+	and a.MSNV in (select e.MSNV
+				from NhanVienKyNang e, KyNang f
+				where e.MSKN = f.MSKN and f.TenKN='Excel')
+
+-- c) Với từng kỹ năng, hãy liệt kê các thông tin (MANV, HoTen, TenCN, TenKN, Mức độ) của những nhân viên thành thạo kỹ năng đó nhất.
+select a.MSNV, a.Ho+' ' + a.Ten as HoTen, b.TenCN, d.TenKN, c.MucDo
+from NhanVien a, ChiNhanh b, NhanVienKyNang c, KyNang d
+where a.MSCN = b.MSCN and a .MSNV = c.MSNV and d.MSKN = c.MSKN and c.MucDo >= all( select e.MucDo	
+																				from NhanVienKynang e
+																				where e.MSKN = d.MSKN)
+order by d.TenKN
+-- d) Liệt kê các chi nhánh (MSCN, TenCN) mà mọi nhân viên trong chi nhánh đó đều biết Word
+
+--select a.TenCN, count(c.MSKN)
+--from ChiNhanh a, NhanVien b, NhanVienKyNang c
+--where a.MSCN=b.MSCN and b.MSNV=c.MSNV and c.MSKN='01'
+--group by a.TenCN
+
+--select a.MSCN, a.TenCN, count(b.MSNV)
+--from ChiNhanh a, NhanVien b
+--where a.MSCN = b.MSCN
+--group by a.MSCN, a.TenCN
+ -- Không biết làm âu :<<
+
+-- 3. Truy vấn gom nhóm dữ liệu
+
