@@ -97,7 +97,6 @@ insert into NhanVienKyNang values('0004','03',1)
 insert into NhanVienKyNang values('0005','02',4)
 insert into NhanVienKyNang values('0005','04',4)
 insert into NhanVienKyNang values('0006','05',4)
-insert into NhanVienKyNang values('0006','01',)
 insert into NhanVienKyNang values('0006','02',4)
 insert into NhanVienKyNang values('0006','03',2)
 insert into NhanVienKyNang values('0007','03',4)
@@ -159,16 +158,118 @@ where a.MSCN = b.MSCN and a .MSNV = c.MSNV and d.MSKN = c.MSKN and c.MucDo >= al
 order by d.TenKN
 -- d) Liệt kê các chi nhánh (MSCN, TenCN) mà mọi nhân viên trong chi nhánh đó đều biết Word
 
---select a.TenCN, count(c.MSKN)
---from ChiNhanh a, NhanVien b, NhanVienKyNang c
---where a.MSCN=b.MSCN and b.MSNV=c.MSNV and c.MSKN='01'
---group by a.TenCN
+select a.MSCN, a.TenCN
+from ChiNhanh a, NhanVien b
+where a.MSCN = b.MSCN
+group by a.MSCN,a .TenCN
+having count(b.MSNV)=(select count(e.MSNV)
+					from NhanVien d, NhanVienKyNang e
+					where a.MSCN=d.MSCN and d.MSNV=e.MSNV and e.MSKN='01'
+					group by d.MSCN)
 
---select a.MSCN, a.TenCN, count(b.MSNV)
---from ChiNhanh a, NhanVien b
---where a.MSCN = b.MSCN
---group by a.MSCN, a.TenCN
- -- Không biết làm âu :<<
+-- Có thể sai (Chả hiểu sao chạy đc :>>)
 
 -- 3. Truy vấn gom nhóm dữ liệu
+-- a) Vỡi mỗi chi nhánh, hãy cho biết các thông tin sau TenCN, soNV (Số nhân viên của chi nhánh đó):
 
+select b.TenCN, count(a.MSNV) as SoNV 
+from NhanVien a, ChiNhanh b
+where a.MSCN = b.MSCN
+group by b.TenCN
+
+
+ -- b) Với mỗi kỹ năng, hãy cho biết TenKN, SoNguoiDung (Số nhân viên biết sử dụng kỹ năng đó)
+
+select a.TenKN, count(b.MSNV) as SoNguoiDung
+from KyNang a, NhanVienKyNang b
+where a.MSKN=b.MSKN
+group by a.TenKN
+
+-- c) Cho biết TenKN có từ 3 nhan viên trong công ty sử dụng trở lên
+
+select a.TenKN, count(b.MSNV) as SoNguoiDung
+from KyNang a, NhanVienKyNang b
+where a.MSKN=b.MSKN
+group by a.TenKN
+having count(b.MSNV) >= 3
+
+-- d) Cho biết TenCN có nhiều nhân viên nhất
+
+select b.TenCN, count(a.MSNV) as SoNV 
+from NhanVien a, ChiNhanh b
+where a.MSCN = b.MSCN
+group by b.TenCN
+having count(a.MSNV) >= all (select count(c.MSNV)
+							from NhanVien c
+							group by c.MSCN)
+
+-- e) Cho biết TenCN có it nhân viên nhất
+
+select b.TenCN, count(a.MSNV) as SoNV 
+from NhanVien a, ChiNhanh b
+where a.MSCN = b.MSCN
+group by b.TenCN
+having count(a.MSNV) <= all (select count(c.MSNV)
+							from NhanVien c
+							group by c.MSCN)
+
+-- f) CVới mỗi nhân vien, hãy cho biết số kỹ năng tin học mà nhân viên đó sử dụng được
+
+select a.MSNV, a.Ho+' '+a.Ten as HoTen, count(b.MSKN) as SoKyNang
+from NhanVien a, NhanVienKyNang b
+where a.MSNV = b.MSNV
+group by a.MSNV, a.Ho, a.Ten
+
+-- g) Cho biết HoTen, TenCN của nhân viên biết sử dụng nhiều kỹ năng nhất
+
+select a.Ho+' '+a.Ten as HoTen, count(b.MSKN) as SoKyNang, c.TenCN
+from NhanVien a, NhanVienKyNang b, ChiNhanh c
+where a.MSNV = b.MSNV and c.MSCN = a.MSCN
+group by a.Ho, a.Ten, c.TenCN
+having count(b.MSKN) >= all (select count(d.MSKN)
+							from NhanVienKyNang d
+							group by d.MSNV)
+
+-- 4. Cập nhật dữ liệu
+-- a) Thêm bộ <'06','Photoshop'> vào bảng KyNang
+
+insert into KyNang values('06','Photoshop')
+select * from KyNang
+go
+
+-- b) Thêm các bộ sau vào bảng NhanVienKyNang
+-- <'0001','06',3>
+-- <'0005','06',2>
+
+insert into NhanVienKyNang values ('0001','06',3)
+insert into NhanVienKyNang values ('0005','06',2)
+select * from NhanVienKyNang
+go
+
+-- c) Cập nhật cho các nhân viên cóp sử dụng kỹ năng 'Word' có mức độ tăng thêm 1 bậc
+
+update NhanVienKyNang 
+set MucDo=MucDo+1
+where MSKN = '01'
+select * from NhanVienKyNang
+
+-- d) Tạo bảng mới NNhanVienChiNhanh1(MaNV,HoTen,SoKyNang)
+
+create table NhanVienChiNhanh1
+(
+	MSNV char(4) primary key foreign key references NhanVien(MSNV),
+	HoTen nvarchar(30),
+	SoKyNang tinyint
+)
+go
+select * from NhanVienChiNhanh1
+
+-- e) Thêm vào bảng trên các thông tinn như đã liệt kê của các nhân viên thuộc chi nhánh 1 (Dùng câu lệnh Insert Into cho nhiều bộ)
+
+insert into NhanVienChiNhanh1(MSNV,HoTen,SoKyNang)
+select a.MSNV, a.Ho+' '+a.Ten as HoTen, count(b.MSKN) as SoKyNang
+from NhanVien a, NhanVienKyNang b
+where a.MSNV = b.MSNV and a.MSCN = '01'
+group by a.MSNV,a.Ho, a.Ten
+select * from NhanVienChiNhanh1
+go
