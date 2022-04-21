@@ -35,8 +35,7 @@ create table NhanVien
 	Ten nvarchar(15),
 	NgaySinh dateTime,
 	NgayVaoLam dateTime,
-	MSCN char(2) foreign key references ChiNhanh(MSCN),
-	constraint RB_Tuoi check (Year(NgayVaoLam) - Year(NgaySinh) >= 18)
+	MSCN char(2) foreign key references ChiNhanh(MSCN)
 )	
 select * from NhanVien
 go
@@ -51,6 +50,20 @@ create table NhanVienKyNang
 )
 select * from NhanVienKyNang
 go
+-- Cài đặt ràng buộc toàn vẹn
+
+create trigger TuoiVaoLam
+on NhanVien for insert, update
+as
+if UPDATE(NgayVaoLam) or UPDATE(NgaySinh)
+Begin
+	if exists(select * from inserted i where Year(i.NgayVaoLam)-YEAR(i.NgaySinh)<18)
+	begin
+		raiserror (N'Nhân viên này chưa đủ tuổi để vào làm',15,1)
+		rollback tran --hủy bỏ thao tác thêm lớp học
+	end
+End
+
 -- Nhập dữ liệu cho các bảng
 
 -- Bảng ChiNhanh:
