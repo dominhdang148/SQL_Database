@@ -217,7 +217,9 @@ having sum(b.SLMua)>=all (select sum(c.SLMua)
 
 -- 14. Cho biết tờ báo phát hành định kỳ 1 tháng 2 lần
 
--- Ko biết làm :">
+select *
+from Bao_TChi
+where DinhKy = N'Bán nguyệt san'
 
 -- 15. Cho biết các tờ báo, tạp chí có từ 3 khách hàng đặt mua trở lên
 
@@ -227,3 +229,66 @@ where a.MaBaoTC=b.MaBaoTC
 group by a.MaBaoTC, a.Ten
 having count(distinct b.MaKH)>=2
 --Hình như ko có tờ báo nào có 3 khách hàng đặt mua cả :v
+
+-- III. Hàm và thủ tục
+
+-- A. Viết các hàm sau:
+-- a) Tính tổng số tiền mua báo/tạp chí của 1 khách hàng cho trước
+
+create function TinhTongSoTienMua_KhachHang(@MaKH char(4))
+returns int
+as
+	begin 
+		declare @TongSoTien int
+		select @TongSoTien = Sum(a.SLMua*b.GiaBan)
+		from DatBao a, Bao_TChi b
+		where a.MaBaoTC = b.MaBaoTC  and a.MaKH = @MaKH
+		return @TongSoTien
+	end
+go
+
+select dbo.TinhTongSoTienMua_KhachHang('KH01') as TongSoTien
+
+-- b) Tính tổng số tiền thu được của một tờ báo/tạp chí cho trước
+
+create function TinhTongSoTienThuDuocCuaMotToBao(@MaBao char(4))
+returns int
+as
+	begin
+		declare @TongSoTien int
+		select @TongSoTien = SUM(b.SLMua *a.GiaBan) 
+		from Bao_TChi a, DatBao b
+		where a.MaBaoTC = b.MaBaoTC and b.MaBaoTC = @MaBao
+		return @TongSoTien
+	end
+go
+
+select dbo.TinhTongSoTienThuDuocCuaMotToBao('PN01') as TongSoTien
+
+-- B. Viết các thủ tục sau:
+-- a) In danh mục báo, tạp chí phải giao cho một khách hàng cho trước
+
+create procedure InDanhMuc_GiaoHang @MaKH char(4)
+as
+	begin 
+		select a.MaBaoTC, a.Ten as TenToBao, b.SLMua, sum(b.SLMua*GiaBan) as ThanhTien
+		from Bao_TChi a, DatBao b
+		where a.MaBaoTC = b.MaBaoTC and b.MaKH= @MaKH
+		group by a.MaBaoTC, a.Ten, b.SLMua
+	end
+go
+
+exec dbo.InDanhMuc_GiaoHang 'KH01'
+
+-- b) In danh sách khách hàng đặt mua báo/tạp chí cho trước
+
+create proc InDSKhachHangDatMua @MaBao char(4)
+as
+	begin 
+		select a.MaKH, a.TenKhachHang, a.DiaChi
+		from KhachHang a, DatBao b
+		where a.MaKH=b.MaKH and b.MaBaoTC = @MaBao
+	end
+go
+
+exec dbo.InDSKhachHangDatMua 'TT01'

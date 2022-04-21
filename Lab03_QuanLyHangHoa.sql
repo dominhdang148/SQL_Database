@@ -123,12 +123,12 @@ create table HangHoa
  go
 
  --Nhập dữ liệu cho HoaDon
- --set format dmy
- insert into HoaDon values('N0001','01/25/2006','CC001',null)
+ set dateformat dmy
+ insert into HoaDon values('N0001','25/01/2006','CC001',null)
  insert into HoaDon values('N0002','01/05/2006','CC002',null)
- insert into HoaDon values('X0001','05/12/2006','K0001',null)
- insert into HoaDon values('X0002','06/16/2006','K0002',null)
- insert into HoaDon values('X0003','04/20/2006','K0001',null)
+ insert into HoaDon values('X0001','12/05/2006','K0001',null)
+ insert into HoaDon values('X0002','16/06/2006','K0002',null)
+ insert into HoaDon values('X0003','20/04/2006','K0001',null)
  select * from HoaDon
  go
 
@@ -233,11 +233,65 @@ having sum(b.SoLuong) <= all (select sum(d.SoLuong)
 
 -- Câu 11) Cho biết hóa đơn nhập nhiều mặt hàng nhất
 
+select a.SoHD, NgayLapHoaDon, MaDT, sum(b.SoLuong) as TongSoMatHang
+from HoaDon a, CT_HoaDon b
+where a.SoHD=b.SoHD and a.SoHD like '%N%'
+group by a.SoHD, a.NgayLapHoaDon, a.MaDT
+having sum(b.SoLuong) >= all(select sum(c.SoLuong)
+							from CT_HoaDon c
+							where c.SoHD like '%N%'
+							group by c.SoHD)
+
+-- Câu 12) Cho biết các mặt hàng không được nhập hàng trong tháng 1/2006
+
 select *
-from CT_HoaDon a
-where soHD like '%N%'
-group by a.MaHH, a.SoHD, a.DonGia, a.SoLuong
-having sum(a.SoLuong)>=all(select sum(b.SoLuong)
-						from CT_HoaDon b
-						where b.SoHD like '%N%'
-						group by b.MaHH)
+from HangHoa a
+where a.MaHH not in (select b.MaHH
+					from CT_HoaDon b, HoaDon c
+					where b.SoHD = c.SoHD and b.SoHD like '%N%' and MONTH(c.NgayLapHoaDon) = 1 and YEAR(c.NgayLapHoaDon) =2006)
+
+-- Câu 13) Cho biết các mặt hàng không bán được trong tháng 6/2006
+
+select *
+from HangHoa a
+where a.MaHH not in (select b.MaHH
+					from CT_HoaDon b, HoaDon c
+					where b.SoHD = c.SoHD and b.SoHD like '%X%' and MONTH(c.NgayLapHoaDon) = 6 and YEAR(c.NgayLapHoaDon) =2006)
+
+-- Câu 14) Cho biết cửa hàng bán bao nhiêu mặt hàng
+
+select count(MaHH)
+from HangHoa
+
+-- Câu 15) Cho biết số mặt hàng mà từng nhà cung cấp có khả năng cung cấp
+
+select a.MaDT,a.TenDT, count(b.MaHH) as SoMatHang
+from DoiTac a, KhaNangCC b
+where a.MaDT = b.MaDT
+group by a.MaDT, a.TenDT
+
+-- Câu 16) Cho biết thông tin của khách hàng có giao dịch với cửa hàng nhiều nhất
+
+
+
+-- Câu 17) Tính tổng doanh thu 2006
+
+
+
+-- Câu 18) Cho biết mặt hàng bán chạy nhất
+
+
+
+-- Câu 19) Liệt kê thông tin bán hàng của tháng 5 /2006 bao gồm mhh, tenhh, dvt, tổng số lượng, tổng thành tiền
+
+
+
+-- Câu 20) Liệt kê thông tin của mặt hàng có nhiều người mua nhất
+
+
+
+-- Câu 21) Tính và cập nhật Tổng giá trị của các hóa đơn
+
+
+
+-- III. THỦ TỤC VÀ HÀM
