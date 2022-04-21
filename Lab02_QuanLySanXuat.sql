@@ -157,3 +157,115 @@ insert into CongNhan (MACN,Ho,Ten,Phai,MaTSX) values('CN006',N'Lê Thị',N'Lan'
 select * from CongNhan
 
 delete from CongNhan where MACN='CN006'
+
+-- III. Thủ tục và hàm
+
+-- A. Viết các hàm sau:
+-- a) Tính tổng số công nhân của một tổ sản xuất cho trước:
+
+create function TinhTongSoCongNhanCuaToSX(@MaTSX char(4))
+returns int
+as
+	begin
+		declare @soCN int
+		select @soCN = count(MACN)
+		from CongNhan
+		where MaTSX = @MaTSX
+		return @soCN
+	end
+go
+
+select dbo.TinhTongSoCongNhanCuaToSX('TS01') as N'Số Công nhân'
+
+-- b) Tình tổng sản lượng sản xuất trong một tháng của một công nhán cho trước
+
+create function TinhTongSanLuongTrongMotThangCuaCongNhan(@MaCN char(5), @Thang int)
+returns int
+as
+	begin
+		declare @TongSL int 
+		select @TongSL = sum(SoLuong)
+		from ThanhPham
+		where MACN=@MaCN and Month(Ngay)=@Thang
+		return @TongSL
+	end
+go
+
+select dbo.TinhTongSanLuongTrongMotThangCuaCongNhan('CN001', 2) as TongSL
+
+-- c) Tính tổng tiền công tháng của một công nhân cho trước
+
+create function TinhTongTienCongThangCuaCongNhan(@MaCN char(5), @Thang int)
+returns int
+as
+	begin 
+		declare @ThanhTien int
+		select @ThanhTien = sum(a.SoLuong*b.TienCong)
+		from ThanhPham a, SanPham b
+		where a.MASP=b.MASP and a.MACN = @MaCN and MONTH(a.Ngay)=@Thang
+		return @ThanhTien
+	end
+go
+
+select dbo.TinhTongTienCongThangCuaCongNhan('CN001',2) as TongThanhTien
+
+-- d) Tính tổng thu nhập trong năm của một tổ sản xuất cho trước
+
+create function TinhTongThuNhapNamCuaToSX(@MaTSX char(4), @Nam int)
+returns int
+as
+	begin
+		declare @TongTN int
+		select @TongTN = Sum(c.TienCong*a.SoLuong)
+		from ThanhPham a, CongNhan b, SanPham c
+		where a.MACN=b.MACN and a.MASP = c.MASP and b.MaTSX = @MaTSX and Year(a.Ngay) = @Nam
+		return @TongTN
+	end
+go
+
+select dbo.TinhTongThuNhapNamCuaToSX('TS01',2007) as N'Tổng Thu nhập'
+select * 
+from ThanhPham a, CongNhan b, SanPham c
+where a.MACN=b.MACN and a.MASP=c.MASP and b.MaTSX = 'TS01'
+
+-- e) Tính tổng sản lượng sản xuất của một loại sản phẩm trong một khoảng thời gian cho trước
+
+create function TinhTongSLSXCuaMotSanPhamTrongThang(@MaSP char(5), @Thang int)
+returns int
+as
+	begin
+		declare @TongSP int
+		select @TongSP = Sum(SoLuong)
+		from ThanhPham
+		where MASP = @MaSP and MONTH(Ngay) = @Thang
+		return @TongSP
+	end
+go
+
+select dbo.TinhTongSLSXCuaMotSanPhamTrongThang('SP001',2) as TongSLSX
+select * from ThanhPham
+
+-- B. Viết các thủ tục sau:
+-- a) In danh sách các công nhân của một tổ sản xuất cho trước
+
+create proc InDSTo @MaTSX char(4)
+as
+	select *
+	from CongNhan
+	where MaTSX=@MaTSX
+go
+
+exec dbo.InDSTo 'TS02'
+
+-- b) In bảng chấm công sản xuất trong tháng của một công nhân cho trước (Bao gồm Ten sản phẩm, đơn vị tính, sổ lượng sản xuất trong tháng, đơn giá, thành tiền)
+
+create proc InBangChamCong @MaCN char(5), @Thang int
+as
+	select a.TenSP, a.DTV, Sum(SoLuong) as SoLuongSX, a.TienCong as DonGia, Sum(a.TienCong * b.SoLuong) as ThanhTien
+	from SanPham a, ThanhPham b
+	where a.MASP=b.MASP and b.MACN = @MaCN and Month(b.Ngay)=@Thang
+	group by a.TenSP, a.DTV, a.TienCong
+go
+
+exec dbo.InBangChamCong 'CN001',2
+select * from ThanhPham
